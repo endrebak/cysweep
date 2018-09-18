@@ -108,7 +108,6 @@ def test_intersection(df, df2, strandedness):
     df2 = df2.sort_values("Start End".split()).reset_index(drop=True)
     print(df2)
 
-    result_df = None
     with tempfile.TemporaryDirectory() as temp_dir:
         f1 = "{}/f1.bed".format(temp_dir)
         f2 = "{}/f2.bed".format(temp_dir)

@@ -1,4 +1,6 @@
+from libcpp.algorithm cimport sort as stdsort
 from libcpp.vector cimport vector
+from libcpp cimport bool
 from libc.stdlib cimport malloc, free
 cimport cython
 
@@ -11,6 +13,18 @@ cdef struct Interval:
     unsigned int index
 
 
+cdef bool interval_compare(Interval a, Interval b):
+
+    if a.start < b.start:
+        return 1
+    elif a.start > b.start:
+        return 0
+    elif a.end < b.end:
+        return 1
+    else:
+        return 0
+
+
 cdef class SortedList:
 
     # the cache should be an array, not the intervals
@@ -18,24 +32,33 @@ cdef class SortedList:
     cdef Interval *intervals
     cdef unsigned int length
 
-
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.initializedcheck(False)
     def __cinit__(self, long [::1] starts, long [::1] ends, long [::1] indexes):
 
-        self.intervals = <Interval *> malloc(len(starts) * sizeof(Interval))
+        cdef Interval *intervals = <Interval *> malloc(len(starts) * sizeof(Interval))
         cdef unsigned int length = len(starts)
         cdef unsigned int i = 0
         self.length = length
 
-        # need to check that starts are sorted and that ends are always after start
-        # TODO: add this check
         for i in range(length):
 
-            self.intervals[i].start = starts[i]
-            self.intervals[i].end = ends[i]
-            self.intervals[i].index = indexes[i]
+            intervals[i].start = starts[i]
+            intervals[i].end = ends[i]
+            intervals[i].index = indexes[i]
+
+        print("unsorted intervals:")
+        for i in range(length):
+            print(intervals[i])
+
+        stdsort(intervals, intervals + length, interval_compare)
+
+        print("sorted intervals:")
+        for i in range(length):
+            print(intervals[i])
+
+        self.intervals = intervals
 
 
     @cython.boundscheck(False)
