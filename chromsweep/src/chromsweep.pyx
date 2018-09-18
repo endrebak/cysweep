@@ -61,7 +61,7 @@ cdef class SortedList:
         cdef Interval db
         cdef Interval _db
         cdef unsigned int nfound = 0
-        cdef unsigned int db_pos = 1
+        cdef unsigned int db_pos = 0
         cdef unsigned int db_cache_pos = 0
         cdef unsigned int to_remove_pos = 0
 
@@ -75,7 +75,6 @@ cdef class SortedList:
             # scan the cache #
             ##################
 
-            # iterate over the database entries to consider
             for db_cache_pos in range(int(db_cache.size())):
                 _db = db_cache[db_cache_pos]
 
@@ -99,10 +98,10 @@ cdef class SortedList:
                 else:
                     to_remove.push_back(db_cache_pos)
 
-            # remove cache elements that end before current query
             if not to_remove.empty():
-                for to_remove_pos in range(int(to_remove.size())):
-                    # quick delete of obto_remove_posect
+                # if remove from back?
+                for to_remove_pos in range(0, int(to_remove.size()), -1):
+                    # quick delete of object, must start in back not to disturb delete positions
                     # https://stackoverflow.com/questions/3487717/erasing-multiple-objects-from-a-stdvector
                     db_cache[to_remove[to_remove_pos]] = db_cache.back()
                     db_cache.pop_back()
@@ -130,6 +129,14 @@ cdef class SortedList:
                 db_pos += 1
 
         return query_hits_arr[:nfound], db_hits_arr[:nfound]
+
+
+    def find_overlaps_interval(self, start, end):
+
+        # slow, but likely good enough
+        # not to be used in a loop or anything XD
+
+        pass
 
 
     def __dealloc__(self):
