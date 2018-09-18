@@ -9,4 +9,5 @@ qs = pd.read_table("chr1_rmsk.bed.gz", header=None, usecols=[0, 1, 2], names="Ch
 db_sl = SortedList(db.Start.values, db.End.values, db.index.values)
 qs_sl = SortedList(qs.Start.values, qs.End.values, qs.index.values)
 
-print(db_sl.find_overlaps(qs_sl))
+q_hits, db_hits = db_sl.find_overlaps(qs_sl)
+print(len(q_hits), len(db_hits))

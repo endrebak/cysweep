@@ -24,26 +24,24 @@ cdef class SortedList:
     @cython.initializedcheck(False)
     def __cinit__(self, long [::1] starts, long [::1] ends, long [::1] indexes):
 
-        cdef Interval *intervals = <Interval *> malloc(len(starts) * sizeof(Interval))
+        self.intervals = <Interval *> malloc(len(starts) * sizeof(Interval))
         cdef unsigned int length = len(starts)
         cdef unsigned int i = 0
+        self.length = length
 
         # need to check that starts are sorted and that ends are always after start
         # TODO: add this check
         for i in range(length):
 
-            intervals.start = starts[i]
-            intervals.end = ends[i]
-            intervals.index = indexes[i]
+            self.intervals[i].start = starts[i]
+            self.intervals[i].end = ends[i]
+            self.intervals[i].index = indexes[i]
 
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.initializedcheck(False)
     def find_overlaps(self, SortedList database): # self is the query
-
-        print("we are here")
-        print(self.length)
 
         cdef vector[Interval] db_cache
         cdef vector[unsigned int] to_remove
@@ -73,7 +71,6 @@ cdef class SortedList:
         for i in range(self.length):
             query = self.intervals[i]
 
-            print(i, query)
             ##################
             # scan the cache #
             ##################
@@ -89,10 +86,10 @@ cdef class SortedList:
                         # need more space for hits
                         if nfound == arr_length:
                             arr_length = arr_length * 2
-                            database_arr = np.resize(database_arr, arr_length)
-                            query_hits = np.resize(query_hits, arr_length)
-                            database = database_arr
-                            database_start = query_hits
+                            db_hits_arr = np.resize(db_hits_arr, arr_length)
+                            query_hits_arr = np.resize(query_hits_arr, arr_length)
+                            db_hits = db_hits_arr
+                            query_hits = query_hits_arr
 
                         db_hits[nfound] = _db.index
                         query_hits[nfound] = query.index
@@ -120,27 +117,22 @@ cdef class SortedList:
                     # need more space for hits
                     if nfound == arr_length:
                         arr_length = arr_length * 2
-                        database_arr = np.resize(database_arr, arr_length)
-                        query_hits = np.resize(query_hits, arr_length)
-                        database = database_arr
-                        database_start = query_hits
+                        db_hits_arr = np.resize(db_hits_arr, arr_length)
+                        query_hits_arr = np.resize(query_hits_arr, arr_length)
+                        db_hits = db_hits_arr
+                        query_hits = query_hits_arr
 
                     db_hits[nfound] = _db.index
                     query_hits[nfound] = query.index
                     nfound += 1
 
                 db_cache.push_back(_db)
+                db_pos += 1
 
         return query_hits_arr[:nfound], db_hits_arr[:nfound]
 
 
-
-
-
     def __dealloc__(self):
 
-        free(self.intervals)
-
-    def close(self):
-
-        free(self.intervals)
+        if self.intervals:
+            free(self.intervals)
